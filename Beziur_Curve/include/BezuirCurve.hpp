@@ -9,16 +9,18 @@ class Curve
 {
     public:
     Curve()
-    :point_1(), point_2(), point_3(), path(), curve()
+    :point_1(), point_2(), point_3(), point_4(), path(), curve()
     {
         point_1.setRadius(5.f);
         point_2.setRadius(5.f);
         point_3.setRadius(5.f);
+        point_4.setRadius(5.f);
         curve.setRadius(5.f);
 
         point_1.setOrigin(sf::Vector2f(5.f, 5.f));
         point_2.setOrigin(sf::Vector2f(5.f, 5.f));
         point_3.setOrigin(sf::Vector2f(5.f, 5.f));
+        point_4.setOrigin(sf::Vector2f(5.f, 5.f));
         curve.setOrigin(sf::Vector2f(5.f, 5.f));
 
         curve.setFillColor(sf::Color(255, 0, 0));
@@ -26,6 +28,7 @@ class Curve
         finishedDrawing = false;
         drawQuadratic = false;
         drawLinear = false;
+        drawCubic = false;
         path.setPrimitiveType(sf::LineStrip);
         t = 0;
     }
@@ -39,6 +42,7 @@ class Curve
         point_3.setPosition(p_point3);
         drawQuadratic = true;
         drawLinear = false;
+        drawCubic = false;
         startDrawing();
     }
     void setPosition
@@ -48,6 +52,21 @@ class Curve
         point_2.setPosition(p_point2);
         drawLinear = true;
         drawQuadratic = false;
+        drawCubic = false;
+        startDrawing();
+    }
+
+    void setPosition
+    (sf::Vector2f p_point1, sf::Vector2f p_point2, 
+    sf::Vector2f p_point3, sf::Vector2f p_point4)
+    {
+        point_1.setPosition(p_point1);
+        point_2.setPosition(p_point2);
+        point_3.setPosition(p_point3);
+        point_4.setPosition(p_point4);
+        drawLinear = false; 
+        drawQuadratic = false; 
+        drawCubic = true; 
         startDrawing();
     }
     void startDrawing()
@@ -83,6 +102,18 @@ class Curve
                     window.draw(path);
                     window.display(); 
                 }
+                if(drawCubic)
+                {
+                    window.clear();
+                    calc_cubic(t);
+                    window.draw(point_1);
+                    window.draw(point_2);
+                    window.draw(point_3);
+                    window.draw(point_4);
+                    window.draw(curve);
+                    window.draw(path);
+                    window.display();  
+                }
                 
             }
         if(t > 1 && drawLinear == true)
@@ -105,18 +136,32 @@ class Curve
             window.draw(path);
             window.display();
         }
+        if(t > 1 && drawCubic == true)
+        {
+            drawing = false;
+            window.clear();
+            window.draw(point_1);
+            window.draw(point_2);
+            window.draw(point_3);
+            window.draw(point_4);
+            window.draw(curve);
+            window.draw(path);
+            window.display();  
+        }
 
     }
     private:
     sf::CircleShape point_1;
     sf::CircleShape point_2;
     sf::CircleShape point_3;
+    sf::CircleShape point_4;
     sf::CircleShape curve;
     sf::VertexArray path;
     bool drawing;
     bool finishedDrawing;
     bool drawQuadratic;
     bool drawLinear;
+    bool drawCubic;
     float t;
 
     private:
@@ -157,4 +202,42 @@ class Curve
         path.append(sf::Vertex(vec_QuadPos));
         curve.setPosition(vec_QuadPos);
     }
+
+    void calc_cubic(float t)
+    {
+        sf::Vector2f vec_point_1 = point_1.getPosition();
+        sf::Vector2f vec_point_2 = point_2.getPosition();
+        sf::Vector2f vec_point_3 = point_3.getPosition();
+        sf::Vector2f vec_point_4 = point_4.getPosition();
+
+        sf::Vector2f vec_linearPos_1;
+        sf::Vector2f vec_linearPos_2;
+        sf::Vector2f vec_linearPos_3;
+        sf::Vector2f vec_QuadPos_1;
+        sf::Vector2f vec_QuadPos_2;
+        sf::Vector2f vec_CubicPos;
+
+        vec_linearPos_1.x = vec_point_1.x*(1 - t) + vec_point_2.x*t;
+        vec_linearPos_1.y = vec_point_1.y*(1 - t) + vec_point_2.y*t;
+
+        vec_linearPos_2.x = vec_point_2.x*(1 - t) + vec_point_3.x*t;
+        vec_linearPos_2.y = vec_point_2.y*(1 - t) + vec_point_3.y*t;
+
+        vec_linearPos_3.x = vec_point_3.x*(1 - t) + vec_point_4.x*t;
+        vec_linearPos_3.y = vec_point_3.y*(1 - t) + vec_point_4.y*t;
+
+        vec_QuadPos_1.x = vec_linearPos_1.x*(1 - t) + vec_linearPos_2.x*t;
+        vec_QuadPos_1.y = vec_linearPos_1.y*(1 - t) + vec_linearPos_2.y*t;
+
+        vec_QuadPos_2.x = vec_linearPos_2.x*(1 - t) + vec_linearPos_3.x*t;
+        vec_QuadPos_2.y = vec_linearPos_2.y*(1 - t) + vec_linearPos_3.y*t;
+
+        vec_CubicPos.x = vec_QuadPos_1.x*(1 - t) + vec_QuadPos_2.x*t;
+        vec_CubicPos.y = vec_QuadPos_1.y*(1 - t) + vec_QuadPos_2.y*t;
+        
+        
+        path.append(sf::Vertex(vec_CubicPos));
+        curve.setPosition(vec_CubicPos);
+    }
+
 };
